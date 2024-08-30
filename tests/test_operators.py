@@ -22,7 +22,9 @@ from minitorch.operators import (
     relu,
     relu_back,
     sigmoid,
+    is_close,
     sum,
+    reduce,
 )
 
 from .strategies import assert_close, small_floats
@@ -107,40 +109,54 @@ def test_sigmoid(a: float) -> None:
     * It crosses 0 at 0.5
     * It is  strictly increasing.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # less than 1 and greater than 0
+    assert lt(sigmoid(a), add(1.0, 1e2))
+    assert lt(add(0.0, neg(1e2)), sigmoid(a))
+    # sig(0.0) = 0.5
+    assert eq(sigmoid(0.0), 0.5)
+    # strictly increasing
+    assert lt(sigmoid(a), sigmoid(add(a, 1e2))) or eq(sigmoid(a), 1.0)
+    # 1 - sig(x) = sig(-x)
+    assert is_close(add(1.0, neg(sigmoid(a))), sigmoid(neg(a)))
 
 
 @pytest.mark.task0_2
 @given(small_floats, small_floats, small_floats)
 def test_transitive(a: float, b: float, c: float) -> None:
     "Test the transitive property of less-than (a < b and b < c implies a < c)"
-    raise NotImplementedError("Need to include this file from past assignment.")
+    this_bool = True
+    if lt(a, b) and lt(b, c) and lt(c, a):
+        this_bool = False
+    assert this_bool
 
 
 @pytest.mark.task0_2
-def test_symmetric() -> None:
+@given(small_floats, small_floats)
+def test_symmetric(a: float, b: float) -> None:
     """
     Write a test that ensures that :func:`minitorch.operators.mul` is symmetric, i.e.
     gives the same value regardless of the order of its input.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    assert eq(mul(a, b), mul(b, a))
 
 
 @pytest.mark.task0_2
-def test_distribute() -> None:
+@given(small_floats, small_floats, small_floats)
+def test_distribute(a: float, b: float, c: float) -> None:
     r"""
     Write a test that ensures that your operators distribute, i.e.
     :math:`z \times (x + y) = z \times x + z \times y`
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    assert is_close(mul(a, add(b, c)), add(mul(a, b), mul(a, c)))
 
 
 @pytest.mark.task0_2
-def test_other() -> None:
+@given(small_floats)
+def test_other(a: float) -> None:
     """
     Write a test that ensures some other property holds for your functions.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    assert eq(mul(1, a), a)
 
 
 # ## Task 0.3  - Higher-order functions
@@ -168,7 +184,7 @@ def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
     Write a test that ensures that the sum of `ls1` plus the sum of `ls2`
     is the same as the sum of each element of `ls1` plus each element of `ls2`.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    assert is_close(add(sum(ls1), sum(ls2)), sum(addLists(ls1, ls2)))
 
 
 @pytest.mark.task0_3
