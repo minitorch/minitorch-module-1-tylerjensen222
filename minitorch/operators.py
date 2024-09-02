@@ -31,7 +31,7 @@ def add(x, y):
 
 
 def neg(x):
-    return -x
+    return mul(-1.0, x)
 
 
 # - lt
@@ -64,7 +64,7 @@ def sigmoid(x):
 
 # - relu
 def relu(x):
-    return max(x, 0)
+    return max(x, 0.0)
 
 
 # - log
@@ -79,11 +79,15 @@ def exp(x):
 
 # - log_back
 def log_back(x, y):
+    if x == 0.0:
+        return 1000000000000.0
     return y / x
 
 
 # - inv
 def inv(x):
+    if x == 0.0:
+        return 1000000000000.0
     return 1 / x
 
 
