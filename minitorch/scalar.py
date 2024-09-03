@@ -176,22 +176,14 @@ class Scalar:
         derivatives = []
 
         local_derivatives = h.last_fn.backward(h.ctx, d_output)
-        print(f"Local Derivatives: {local_derivatives}")
-
         variables = h.ctx.saved_tensors
-        print(f"Saved Variables: {variables}")
 
-        if h.ctx.no_grad:
-            return variables
+        if h.ctx.no_grad or (variables == ()):
+            return [(x, x) for x in local_derivatives]
 
         # loop through vars and derivatives in context
         for var, df_i in zip(variables, local_derivatives):
-            # skip constants
-            if h.ctx.no_grad:
-                derivatives.append((var, 0.0))
-            else:
-                derivatives.append((var, df_i))
-                print(f"Appending: {(var, df_i)}")
+            derivatives.append((var, df_i))
         return derivatives
 
     def backward(self, d_output: Optional[float] = None) -> None:
