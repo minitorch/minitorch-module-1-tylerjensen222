@@ -68,8 +68,28 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    visited = set()  # To keep track of visited nodes
+    topological_order = []  # To store the topologically sorted variables
+
+    def visit(var):
+        var_id = id(var)
+        # If the variable is already visited, we don't process it again
+        if var_id not in visited:
+            visited.add(var_id)
+
+            # Recursively visit all variables that this variable depends on
+            if var.history is not None:
+                for input_var in var.history.inputs:
+                    visit(input_var)
+
+            # After visiting all the dependencies, add the variable to the order
+            topological_order.append(var)
+
+    # Start the visit from the given variable
+    visit(variable)
+
+    # Return the variables in reverse order to get the correct topological order
+    return reversed(topological_order)
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -83,8 +103,25 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError("Need to implement for Task 1.4")
+    # Step 1: Compute the topological order of the computation graph
+    topo_order = topological_sort(variable)
+
+    # Step 2: Initialize the derivative of the final output with respect to itself
+    if variable.is_leaf():
+        variable.accumulate_derivative(deriv)
+
+    # Step 3: Backpropagate the derivatives through the graph
+    for var in topo_order:
+        if var.history is not None and var.history.last_fn is not None:
+            # Get the current accumulated derivative
+            d_output = var.derivative
+
+            # Use the chain rule to get the local derivatives with respect to inputs
+            local_derivatives = var.chain_rule(d_output)
+
+            # Accumulate the derivatives for each input variable
+            for input_var, d_input in local_derivatives:
+                input_var.accumulate_derivative(d_input)
 
 
 @dataclass
