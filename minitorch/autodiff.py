@@ -72,15 +72,16 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     topological_order = []  # To store the topologically sorted variables
 
     def visit(var):
-        var_id = id(var)
+        var_id = var.unique_id
+        if (var.unique_id in visited) or var.is_constant:
+            return
         # If the variable is already visited, we don't process it again
-        if var_id not in visited:
+        else:
             visited.add(var_id)
 
             # Recursively visit all variables that this variable depends on
-            if var.history is not None:
-                for input_var in var.history.inputs:
-                    visit(input_var)
+            for parent in var.parents:
+                visit(parent)
 
             # After visiting all the dependencies, add the variable to the order
             topological_order.append(var)
