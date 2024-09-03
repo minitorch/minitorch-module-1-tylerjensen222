@@ -73,23 +73,25 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
 
     def visit(var):
         var_id = var.unique_id
-        if (var.unique_id in visited) or var.is_constant:
+
+        # check if variable was alreaady visited
+        if (var_id in visited) or var.is_constant():
             return
-        # If the variable is already visited, we don't process it again
+
         else:
             visited.add(var_id)
 
-            # Recursively visit all variables that this variable depends on
+            # recursively visit all parent variables
             for parent in var.parents:
                 visit(parent)
 
-            # After visiting all the dependencies, add the variable to the order
+            # add to top order
             topological_order.append(var)
 
-    # Start the visit from the given variable
+    # start recursing
     visit(variable)
 
-    # Return the variables in reverse order to get the correct topological order
+    # return reversed
     return reversed(topological_order)
 
 
@@ -104,25 +106,26 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # Step 1: Compute the topological order of the computation graph
+    # get topological sort, init {var: gradient} map
     topo_order = topological_sort(variable)
+    var_gradient_map = {variable.unique_id: deriv}
 
-    # Step 2: Initialize the derivative of the final output with respect to itself
-    if variable.is_leaf():
-        variable.accumulate_derivative(deriv)
+    for back_var in topo_order:
+        # get gradient
+        d_output = var_gradient_map[back_var.unique_id]
 
-    # Step 3: Backpropagate the derivatives through the graph
-    for var in topo_order:
-        if var.history is not None and var.history.last_fn is not None:
-            # Get the current accumulated derivative
-            d_output = var.derivative
+        # if leaf, accumulate
+        if back_var.is_leaf():
+            back_var.accumulate_derivative(d_output)
 
-            # Use the chain rule to get the local derivatives with respect to inputs
-            local_derivatives = var.chain_rule(d_output)
-
-            # Accumulate the derivatives for each input variable
-            for input_var, d_input in local_derivatives:
-                input_var.accumulate_derivative(d_input)
+        # else, chain rule, update map for parents
+        else:
+            vars_to_grads = back_var.chain_rule(d_output)
+            for parent_var, grad in vars_to_grads:
+                if parent_var.unique_id in var_gradient_map:
+                    var_gradient_map[parent_var.unique_id] += grad
+                else:
+                    var_gradient_map[parent_var.unique_id] = grad
 
 
 @dataclass
