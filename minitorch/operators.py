@@ -5,7 +5,7 @@ Collection of the core mathematical operators used throughout the code base.
 import math
 
 # ## Task 0.1
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Tuple
 
 #
 # Implementation of a prelude of elementary functions.
@@ -62,6 +62,16 @@ def sigmoid(x):
     return 1.0 / add(1.0, exp(neg(x))) if lt(0, x) else exp(x) / add(1.0, exp(x))
 
 
+def sigmoid_back(x, d):
+    return mul(
+        d,
+        mul(
+            sigmoid(x),
+            add(1.0, neg(sigmoid(x))),
+        ),
+    )
+
+
 # - relu
 def relu(x):
     return max(x, 0.0)
@@ -75,6 +85,10 @@ def log(x):
 # - exp
 def exp(x):
     return math.exp(x)
+
+
+def exp_back(x, d):
+    return mul(d, exp(x))
 
 
 # - log_back
@@ -93,15 +107,15 @@ def inv(x):
 
 # - inv_back
 def inv_back(x, d):
-    return d * inv(x)
+    return neg(d) * inv(x) ** 2
 
 
 # - relu_back
 def relu_back(x, d):
-    if lt(0, x):
-        return d
+    if lt(x, 0.0):
+        return 0.0
     else:
-        return 0
+        return d
 
 
 #
