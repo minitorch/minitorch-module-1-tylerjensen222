@@ -18,6 +18,7 @@ from .scalar_functions import (
     ReLU,
     ScalarFunction,
     Sigmoid,
+    wrap_tuple,
 )
 
 ScalarLike = Union[float, int, "Scalar"]
@@ -173,18 +174,8 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        derivatives = []
-
         local_derivatives = h.last_fn.backward(h.ctx, d_output)
-        variables = h.ctx.saved_tensors
-
-        if h.ctx.no_grad or (variables == ()):
-            return [(x, x) for x in local_derivatives]
-
-        # loop through vars and derivatives in context
-        for var, df_i in zip(variables, local_derivatives):
-            derivatives.append((var, df_i))
-        return derivatives
+        return zip(h.inputs, wrap_tuple(local_derivatives))
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
